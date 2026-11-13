@@ -1,0 +1,50 @@
+[
+  {
+    "area": 8515767,
+    "cioc": "BRA",
+    "flag": "🇧🇷",
+    "gini": 53.4,
+    "name": "Brazil",
+    "flags": {
+      "png": "https://flagcdn.com/w320/br.png",
+      "svg": "https://flagcdn.com/br.svg"
+    },
+    "latlng": [-10, -55],
+    "region": "Americas",
+    "borders": [
+      "ARG",
+      "BOL",
+      "COL",
+      "FRA",
+      "GUF",
+      "GUY",
+      "PRY",
+      "PER",
+      "SUR",
+      "URY",
+      "VEN"
+    ],
+    "capital": "Brasília",
+    "demonym": "Brazilian",
+    "languages": [
+      {
+        "name": "Portuguese",
+        "iso639_1": "pt",
+        "iso639_2": "por",
+        "nativeName": "Português"
+      }
+    ],
+    "subregion": "South America",
+    "timezones": ["UTC-05:00", "UTC-04:00", "UTC-03:00", "UTC-02:00"],
+    "alpha2Code": "BR",
+    "alpha3Code": "BRA",
+    "currencies": [{ "code": "BRL", "name": "Brazilian real", "symbol": "R$" }],
+    "nativeName": "Brasil",
+    "population": 212559409,
+    "independent": true,
+    "numericCode": "076",
+    "callingCodes": ["55"],
+    "topLevelDomain": [".br"],
+    "populationDensity": 24.96
+  }
+]
