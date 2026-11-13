@@ -3,6 +3,7 @@ node_modules/
 
 # Артефакты сборки и отчёты
 coverage/
+dist/
 
 # Логи
 *.log
