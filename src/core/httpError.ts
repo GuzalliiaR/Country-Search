@@ -1,9 +1,10 @@
 export class HttpError extends Error {
   constructor(
     readonly status: number,
-    _message?: string,
+    message: string = `HTTP error ${status}`,
   ) {
-    super();
-    throw new Error('HttpError: not implemented');
+    super(message);
+    this.name = 'HttpError';
+    this.status = status;
   }
 }
