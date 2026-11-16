@@ -132,3 +132,92 @@ describe('createSearchController', () => {
     );
   });
 });
+
+function okResponse(body: RawCountry[]) {
+  return { ok: true, status: 200, json: () => Promise.resolve(body) };
+}
+
+describe('test on race of requests in createSearchController', () => {
+  const mockFetch = vi.fn();
+  let onResult: Mock<(countries: Country[]) => void>;
+  let onError: Mock<(message: string) => void>;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    mockFetch.mockReset(); // Сброс мок-fetch
+    vi.stubGlobal('fetch', mockFetch); // Подменяем глобальный fetch на мок-функцию
+    onResult = vi.fn();
+    onError = vi.fn();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals(); // Возвращаем оригинальный fetch после каждого теста
+    vi.useRealTimers(); // Возвращаем реальное время
+  });
+
+  it('aborts the previous request when a new query arrives', async () => {
+    const signals: AbortSignal[] = [];
+    const rejections: DOMException[] = [];
+
+    mockFetch.mockImplementation(
+      (_url: string, init: { signal: AbortSignal }) =>
+        new Promise((_resolve, reject) => {
+          signals.push(init.signal); // Сохраняем сигнал
+          init.signal.addEventListener(
+            'abort',
+            () => {
+              rejections.push(init.signal.reason as DOMException); // Сохраняем ошибку отмены
+              reject(init.signal.reason); // Отклоняем промис (как это делает реальный fetch)
+            },
+            { once: true },
+          );
+        }),
+    );
+
+    const controller = createSearchController(onResult, onError);
+
+    controller.onInput('br');
+    await vi.advanceTimersByTimeAsync(500); // Ждем 500мс (срабатывает дебаунс)
+    expect(signals[0].aborted).toBe(false); // Проверяем, что запрос ('br') ушел и он НЕ отменен
+    expect(rejections).toHaveLength(0); // Ошибки отмены не было
+
+    controller.onInput('bra');
+    await vi.advanceTimersByTimeAsync(0); // Прокручиваем 0мс (просто ждем микрозадачи)
+
+    expect(signals[0].aborted).toBe(true); // Старый запрос ('br') отменен
+    expect(rejections).toHaveLength(1); // Ошибка отмены зафиксирована
+    expect(rejections[0].name).toBe('AbortError'); // Это именно AbortError
+
+    expect(onResult).not.toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalled();
+  });
+
+  it('ignores a stale response that arrives after a newer one', async () => {
+    const pending: Array<{ resolve: (value: unknown) => void }> = [];
+
+    mockFetch.mockImplementation(() => {
+      return new Promise((resolve) => {
+        pending.push({ resolve }); // Сохраняем функцию resolve, чтобы вызвать её позже вручную
+      });
+    });
+
+    const controller = createSearchController(onResult, onError);
+
+    controller.onInput('xyz'); // Запрос №1
+    await vi.advanceTimersByTimeAsync(500); // ушел запрос №1 ушел первым
+
+    controller.onInput('bra'); // Запрос №2
+    await vi.advanceTimersByTimeAsync(500); // ушел запрос №2 ушел вторым
+
+    pending[1].resolve(okResponse([{ name: 'Brazil' }])); // быстрый запрос №2 ответил первым (перевод промиса в состояние "выполнено")
+    await vi.advanceTimersByTimeAsync(0); // Прокрутка  на 0 мс + Именно в этот момент выполнится код, который ждал разрешения промиса pending[1]
+
+    pending[0].resolve(okResponse([{ name: 'Stale' }])); // медленный запрос №1 ответил позже
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(onResult).toHaveBeenCalledTimes(1);
+    expect(onResult).toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'Brazil' }),
+    ]);
+  });
+});
