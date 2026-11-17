@@ -24,6 +24,7 @@ export default defineConfig([
   {
     files: [
       'tests/**/*.{ts,mts}',
+      'scripts/**/*.{js,mjs}',
       '**/*.config.{ts,mts,js,mjs}',
       'eslint.config.mts',
     ],

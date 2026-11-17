@@ -4,6 +4,7 @@ node_modules/
 # Артефакты сборки и отчёты
 coverage/
 dist/
+_site/
 
 # Логи
 *.log
