@@ -180,10 +180,8 @@ body {
 .card {
   display: flex;
   flex-direction: column;
-  padding: 0;
   overflow: hidden;
   text-align: left;
-  font: inherit;
   color: inherit;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -199,11 +197,6 @@ body {
   transform: scale(0.97);
   border-color: #dcd4c2;
   box-shadow: var(--shadow-hover);
-}
-
-.card:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 4px rgb(208 229 70 / 55%);
 }
 
 .card__flag {
