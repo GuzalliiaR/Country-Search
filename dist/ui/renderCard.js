@@ -30,7 +30,7 @@ export default function renderCard(country) {
             }),
         ],
     });
-    const card = createEl('button', {
+    const card = createEl('div', {
         className: 'card',
         on: { click: () => openDetails(country) },
         children: [flag, mainInfoAboutCountry],
