@@ -18,7 +18,7 @@
     "build:site": "npm run build && node scripts/build-site.mjs",
     "lint": "eslint .",
     "format": "prettier . --write --ignore-unknown",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "prepare": "husky",
     "deploy": "npm run build:site && gh-pages -d _site -b gh-pages"
   },
