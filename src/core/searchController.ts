@@ -21,19 +21,20 @@ export default function createSearchController(
     //  - AbortSignal.timeout(ms) - отмена запроса из-за отсутствия ответа долгое время (ошибка приходит как DOMException с name === 'TimeoutError')
     const composed = AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]);
 
+    let countries: Country[];
+
     try {
       const rawData = await searchCountries(query, composed);
       // проверяем устарел ли ответ от сервера, если да, то onResult(data) не выполняем
       if (id !== requestId) return;
-      const data = rawData.map((countryObj) => mapCountryResponse(countryObj));
-      onResult(data);
+      countries = rawData.map((countryObj) => mapCountryResponse(countryObj));
     } catch (error) {
       // проверяем устарел ли ответ от сервера, если да, то не выполняем никакой из сценариев в catch
       if (id !== requestId) return;
 
-      if (error instanceof DOMException && error.name === 'AbortError') return;
+      if (error instanceof Error && error.name === 'AbortError') return;
 
-      if (error instanceof DOMException && error.name === 'TimeoutError') {
+      if (error instanceof Error && error.name === 'TimeoutError') {
         onError('Превышено время ожидания ответа сервера ⌛');
         return;
       }
@@ -43,9 +44,15 @@ export default function createSearchController(
         return;
       }
 
-      // Выброс ошибки, если она вызвана не в searchCountries (нет сети, DNS, CORS, прерванное соединение, баг в UI-рендере onResult(...))
-      throw error;
+      // Выброс ошибки, если она вызвана не в searchCountries
+      // Сетевой обрыв, DNS, CORS, прерванное соединение, битый JSON
+      onError(
+        'Не удалось получить данные. Проверьте соединение с интернетом и повторите попытку',
+      );
+      return;
     }
+
+    onResult(countries);
   }
 
   const delayedFn = (query: string) => {
@@ -57,7 +64,7 @@ export default function createSearchController(
       return;
     }
 
-    run(query, requestId);
+    void run(query, requestId);
   };
 
   // возвращает выполнение фун-ции delayedFn через 500 мс после вызова debouncedRun(query)
